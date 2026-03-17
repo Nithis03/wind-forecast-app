@@ -28,6 +28,8 @@ export function mergeWindData(
       time: new Date(t).toISOString(),
       actual: undefined,
       forecast: null,
+      error: null,
+      absError: null,
     });
   }
 
@@ -84,6 +86,11 @@ export function mergeWindData(
     if (bestForecast) {
       const existing = resultData.get(targetTimeMs)!;
       existing.forecast = bestForecast.forecastMW;
+
+      if (existing.actual !== undefined) {
+        existing.error = Number((existing.forecast - existing.actual).toFixed(2));
+        existing.absError = Math.abs(existing.error);
+      }
     }
   }
 
