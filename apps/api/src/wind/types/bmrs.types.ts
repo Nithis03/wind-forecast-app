@@ -2,21 +2,18 @@ export interface BmrsActualData {
   settlementDate: string;
   settlementPeriod: number;
   fuelType: string;
-  generationMW: number;
+  generation: number;
+  startTime: string;
 }
 
 export interface BmrsForecastData {
-  settlementDate: string;
-  settlementPeriod: number;
-  forecastMW: number;
+  settlementDate?: string;
+  settlementPeriod?: number;
+  generation: number;
   publishTime: string;
+  startTime: string;
 }
 
-export interface BmrsResponse<T> {
-  metadata: {
-    dataset: string;
-    publishTime?: string;
-  };
-  data: T[];
-}
+export type BmrsResponse<T> = T[];
+
 

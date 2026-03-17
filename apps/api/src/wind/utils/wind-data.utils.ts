@@ -21,8 +21,7 @@ export function mergeWindData(
   const endTime = new Date(end).getTime();
   const thirtyMinsInMs = 30 * 60 * 1000;
 
-  // Initialize the map with null forecasts and undefined actuals for the time window
-  // Step through in 30-minute intervals (settlement periods)
+  // Initialize the map with null forecasts and undefined actuals
   for (let t = startTime; t <= endTime; t += thirtyMinsInMs) {
     resultData.set(t, {
       time: new Date(t).toISOString(),
@@ -35,21 +34,17 @@ export function mergeWindData(
 
   // Populate Actuals
   for (const actual of actuals) {
-    const targetDate = getStartTimeFromSettlement(actual.settlementDate, actual.settlementPeriod);
-    const targetTime = targetDate.getTime();
+    const targetTime = new Date(actual.startTime).getTime();
     if (resultData.has(targetTime)) {
       const existing = resultData.get(targetTime)!;
-      existing.actual = actual.generationMW;
+      existing.actual = actual.generation;
     }
   }
 
   // Group Forecasts by Target Time
   const forecastsByTargetTime = new Map<number, BmrsForecastData[]>();
   for (const forecast of forecasts) {
-    const targetTime = getStartTimeFromSettlement(
-      forecast.settlementDate,
-      forecast.settlementPeriod,
-    ).getTime();
+    const targetTime = new Date(forecast.startTime).getTime();
     if (!forecastsByTargetTime.has(targetTime)) {
       forecastsByTargetTime.set(targetTime, []);
     }
@@ -57,24 +52,20 @@ export function mergeWindData(
   }
 
   // Pick the best forecast based on horizon rules
-  // Rule: publishTime <= targetTime - (horizon hours)
-  // Tie-breaker: latest publishTime
+  const horizonMs = horizon * 60 * 60 * 1000;
   for (const [targetTimeMs, targetForecasts] of forecastsByTargetTime.entries()) {
     if (!resultData.has(targetTimeMs)) continue;
 
     let bestForecast: BmrsForecastData | null = null;
-    const horizonMs = horizon * 60 * 60 * 1000;
     const maxAllowedPublishTimeMs = targetTimeMs - horizonMs;
 
     for (const forecast of targetForecasts) {
       const publishTimeMs = new Date(forecast.publishTime).getTime();
 
-      // Enforce: publishTime <= targetTime - horizon
       if (publishTimeMs <= maxAllowedPublishTimeMs) {
         if (!bestForecast) {
           bestForecast = forecast;
         } else {
-          // latest publish time wins
           const currentBestPublishTimeMs = new Date(bestForecast.publishTime).getTime();
           if (publishTimeMs > currentBestPublishTimeMs) {
             bestForecast = forecast;
@@ -85,8 +76,9 @@ export function mergeWindData(
 
     if (bestForecast) {
       const existing = resultData.get(targetTimeMs)!;
-      existing.forecast = bestForecast.forecastMW;
+      existing.forecast = bestForecast.generation;
 
+      // Calculate Errors
       if (existing.actual !== undefined) {
         existing.error = Number((existing.forecast - existing.actual).toFixed(2));
         existing.absError = Math.abs(existing.error);
@@ -94,9 +86,9 @@ export function mergeWindData(
     }
   }
 
-  // Return sorted array
   return Array.from(resultData.values()).sort(
     (a, b) => new Date(a.time).getTime() - new Date(b.time).getTime(),
   );
 }
+
 

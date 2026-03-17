@@ -32,7 +32,7 @@ export class BmrsService {
         this.httpService.get<BmrsResponse<BmrsActualData>>(url, { params }),
       );
 
-      return data?.data || this.mockActualData(start, end);
+      return data?.length ? data : this.mockActualData(start, end);
     } catch (error) {
       this.logger.error(`Failed to fetch ACTUAL generation data: ${(error as Error).message}`);
       return this.mockActualData(start, end);
@@ -52,12 +52,13 @@ export class BmrsService {
         this.httpService.get<BmrsResponse<BmrsForecastData>>(url, { params }),
       );
 
-      return data?.data || this.mockForecastData(start, end);
+      return data?.length ? data : this.mockForecastData(start, end);
     } catch (error) {
       this.logger.error(`Failed to fetch FORECAST generation data: ${(error as Error).message}`);
       return this.mockForecastData(start, end);
     }
   }
+
 
   private mockActualData(start: string, end: string): BmrsActualData[] {
     const mock: BmrsActualData[] = [];
@@ -73,7 +74,8 @@ export class BmrsService {
         settlementDate: date.toISOString().split('T')[0],
         settlementPeriod: period,
         fuelType: 'WIND',
-        generationMW: Math.random() * 2000 + 1000,
+        generation: Math.random() * 2000 + 1000,
+        startTime: date.toISOString(),
       });
       current += halfHour;
     }
@@ -95,8 +97,9 @@ export class BmrsService {
         mock.push({
           settlementDate: date.toISOString().split('T')[0],
           settlementPeriod: period,
-          forecastMW: Math.random() * 2000 + 1100,
+          generation: Math.random() * 2000 + 1100,
           publishTime: new Date(current - offset * 60 * 60 * 1000).toISOString(),
+          startTime: date.toISOString(),
         });
       }
       current += halfHour;
@@ -104,4 +107,5 @@ export class BmrsService {
     return mock;
   }
 }
+
 
