@@ -1,29 +1,31 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, BadRequestException } from '@nestjs/common';
 import { WindDataPoint } from 'shared';
-import axios from 'axios';
+import { BmrsService } from './bmrs.service';
+import { isValidStartDate } from './utils/date.utils';
+import { mergeWindData } from './utils/wind-data.utils';
 
 @Injectable()
 export class WindService {
-  async getWindData(start: string, end: string, horizon: number): Promise<WindDataPoint[]> {
-    // In a real application, we would use axios or fetch to call an external API
-    // e.g. const response = await axios.get(`https://api.externalwind.com/data?start=${start}&end=${end}`);
-    
-    const mockData: WindDataPoint[] = [];
-    let currentTime = new Date(start).getTime();
-    const endTime = new Date(end).getTime();
-    const hourInMs = 60 * 60 * 1000;
+  constructor(private readonly bmrsService: BmrsService) {}
 
-    // Generate mock data up to `horizon` hours ahead
-    while (currentTime <= endTime) {
-      mockData.push({
-        time: new Date(currentTime).toISOString(),
-        actual: currentTime <= Date.now() ? Math.random() * 20 + 5 : undefined,
-        forecast: Math.random() * 20 + 5,
-      });
-      currentTime += hourInMs;
+  async getWindData(
+    start: string,
+    end: string,
+    horizon: number,
+  ): Promise<WindDataPoint[]> {
+    if (!isValidStartDate(start)) {
+      throw new BadRequestException(
+        'Data can only be queried from January 2025 onwards.',
+      );
     }
 
-    // Apply the horizon limit (in hours) to the generated forecasts
-    return mockData.slice(0, horizon || mockData.length);
+    // Execute API requests to BMRS concurrently
+    const [actuals, forecasts] = await Promise.all([
+      this.bmrsService.fetchActualGeneration(start, end),
+      this.bmrsService.fetchForecastGeneration(start, end),
+    ]);
+
+    // Format, sort, limit horizon, and merge into WindDataPoint array
+    return mergeWindData(actuals, forecasts, horizon, start, end);
   }
 }
