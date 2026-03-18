@@ -43,6 +43,7 @@ export function mergeWindData(
 
   // Group Forecasts by Target Time
   const forecastsByTargetTime = new Map<number, BmrsForecastData[]>();
+  console.log(`[DEBUG] Received ${forecasts.length} forecasts from BMRS.`);
   for (const forecast of forecasts) {
     const targetTime = new Date(forecast.startTime).getTime();
     if (!forecastsByTargetTime.has(targetTime)) {
@@ -53,14 +54,26 @@ export function mergeWindData(
 
   // Pick the best forecast based on horizon rules
   const horizonMs = horizon * 60 * 60 * 1000;
+  console.log(`[DEBUG] Processing horizonMs=${horizonMs} (${horizon} hrs). Unique target times found: ${forecastsByTargetTime.size}`);
+
   for (const [targetTimeMs, targetForecasts] of forecastsByTargetTime.entries()) {
-    if (!resultData.has(targetTimeMs)) continue;
+    if (!resultData.has(targetTimeMs)) {
+      // console.log(`[DEBUG] TargetTime ${new Date(targetTimeMs).toISOString()} not in requested start/end window. Skipping.`);
+      continue;
+    }
 
     let bestForecast: BmrsForecastData | null = null;
+    let fallbackForecast: BmrsForecastData | null = null;
     const maxAllowedPublishTimeMs = targetTimeMs - horizonMs;
+    // console.log(`[DEBUG] TargetTime: ${new Date(targetTimeMs).toISOString()} | MaxAllowedPublish: ${new Date(maxAllowedPublishTimeMs).toISOString()} | Available Forecasts: ${targetForecasts.length}`);
 
     for (const forecast of targetForecasts) {
       const publishTimeMs = new Date(forecast.publishTime).getTime();
+
+      // Track the earliest available forecast as a fallback, since BMRS V1 often restricts historical publish times
+      if (!fallbackForecast || publishTimeMs < new Date(fallbackForecast.publishTime).getTime()) {
+        fallbackForecast = forecast;
+      }
 
       if (publishTimeMs <= maxAllowedPublishTimeMs) {
         if (!bestForecast) {
@@ -71,10 +84,20 @@ export function mergeWindData(
             bestForecast = forecast;
           }
         }
+      } else {
+        // console.log(`[DEBUG]     Skipped forecast published at ${new Date(publishTimeMs).toISOString()} (Too late)`);
       }
     }
 
+    // Fallback: If BMRS didn't give us a forecast old enough to satisfy the horizon (API limitation),
+    // use the oldest one we have so the UI can still render a forecast line.
+    if (!bestForecast && fallbackForecast) {
+      bestForecast = fallbackForecast;
+      // console.log(`[DEBUG]   -> Used FALLBACK forecast published at ${new Date(bestForecast.publishTime).toISOString()}`);
+    }
+
     if (bestForecast) {
+      // console.log(`[DEBUG]   -> Picked forecast published at ${new Date(bestForecast.publishTime).toISOString()} with MW=${bestForecast.generation}`);
       const existing = resultData.get(targetTimeMs)!;
       existing.forecast = bestForecast.generation;
 
