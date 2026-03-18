@@ -18,19 +18,23 @@ export class WindService {
         'Data can only be queried from January 2025 onwards.',
       );
     }
-
     // Calculate an expanded publish window for forecasts
     // We must query forecasts that were *published* before the target start time
     // Adding an extra 48h buffer ensures we catch the most recent valid forecast
     const horizonMs = horizon * 60 * 60 * 1000;
     const publishStartMs = new Date(start).getTime() - horizonMs - (48 * 60 * 60 * 1000);
-    const publishStart = new Date(publishStartMs).toISOString();
+    const publishStart = new Date(publishStartMs).toISOString().split('.')[0] + 'Z';
+
+    // Ensure `end` is formatted similarly if it's parsed (though frontend provides YYYY-MM-DDTHH:mm)
+    const endFormatted = end.includes('Z') ? end.split('.')[0] + 'Z' : new Date(new Date(end).getTime()).toISOString().split('.')[0] + 'Z';
+    const startFormatted = start.includes('Z') ? start.split('.')[0] + 'Z' : new Date(new Date(start).getTime()).toISOString().split('.')[0] + 'Z';
 
     // Execute API requests to BMRS concurrently
     const [actuals, forecasts] = await Promise.all([
-      this.bmrsService.fetchActualGeneration(start, end),
-      this.bmrsService.fetchForecastGeneration(publishStart, end),
+      this.bmrsService.fetchActualGeneration(startFormatted, endFormatted),
+      this.bmrsService.fetchForecastGeneration(publishStart, endFormatted),
     ]);
+
 
 
     // Format, sort, limit horizon, and merge into WindDataPoint array
