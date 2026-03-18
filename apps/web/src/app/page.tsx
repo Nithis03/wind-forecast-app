@@ -96,39 +96,42 @@ export default function Home() {
           </div>
         </section>
 
-        <section className="p-6 bg-white rounded-xl shadow-sm border border-gray-100 grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="flex flex-col gap-2">
-            <label className="text-sm font-medium">Start Date</label>
+        <section className="p-6 bg-white rounded-xl shadow-sm border border-gray-100 grid grid-cols-1 md:grid-cols-3 gap-6 items-end">
+          <div className="flex flex-col gap-2 shadow-sm p-3 rounded-lg border border-gray-50">
+            <label className="text-sm font-semibold text-gray-700">Start Time:</label>
             <input 
               type="datetime-local" 
               value={start} 
               onChange={(e) => setStart(e.target.value)}
-              className="px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+              className="px-3 py-2 border rounded focus:ring-2 focus:ring-blue-500 outline-none text-sm"
             />
           </div>
-          <div className="flex flex-col gap-2">
-            <label className="text-sm font-medium">End Date</label>
+          <div className="flex flex-col gap-2 shadow-sm p-3 rounded-lg border border-gray-50">
+            <label className="text-sm font-semibold text-gray-700">End Time:</label>
             <input 
               type="datetime-local" 
               value={end} 
               onChange={(e) => setEnd(e.target.value)}
-              className="px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+              className="px-3 py-2 border rounded focus:ring-2 focus:ring-blue-500 outline-none text-sm"
             />
           </div>
-          <div className="flex flex-col gap-2">
-            <label className="text-sm font-medium">Forecast Horizon ({horizon} hrs)</label>
+          <div className="flex flex-col gap-2 shadow-sm p-3 rounded-lg border border-gray-50">
+            <div className="flex justify-between items-center">
+              <label className="text-sm font-semibold text-gray-700">Forecast Horizon:</label>
+              <span className="text-sm font-bold text-blue-600">{horizon}h</span>
+            </div>
             <input 
               type="range" 
               min="0" 
               max="48" 
               value={horizon} 
               onChange={(e) => setHorizon(Number(e.target.value))}
-              className="w-full mt-2"
+              className="w-full mt-2 accent-blue-600 cursor-pointer"
             />
           </div>
         </section>
 
-        <section className="p-6 bg-white rounded-xl shadow-sm border border-gray-100 h-[500px]">
+        <section className="p-6 bg-white rounded-xl shadow-sm border border-gray-100 h-[600px]">
           <h2 className="text-lg font-semibold mb-6">Generation Prediction (MW) vs Actual</h2>
           {inputError ? (
             <div className="w-full h-full flex flex-col items-center justify-center text-red-500 bg-red-50 rounded-lg border border-red-100 p-8 text-center">
@@ -140,15 +143,28 @@ export default function Home() {
             </div>
           ) : data.length > 0 ? (
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={data} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" />
+              <LineChart data={data} margin={{ top: 20, right: 30, left: 40, bottom: 80 }}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#F3F4F6" />
                 <XAxis 
                   dataKey="time" 
-                  tickFormatter={(val) => new Date(val).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  tickFormatter={(val) => {
+                    const d = new Date(val);
+                    const timeStr = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
+                    const dateStr = d.toLocaleDateString([], { day: '2-digit', month: '2-digit', year: '2-digit' });
+                    return `${timeStr} ${dateStr}`;
+                  }}
                   stroke="#9CA3AF"
-                  fontSize={12}
+                  fontSize={10}
+                  height={60}
+                  minTickGap={30}
+                  label={{ value: 'Target Time End (UTC)', position: 'insideBottom', offset: -20, fontSize: 14, fontWeight: 600, fill: '#4B5563' }}
                 />
-                <YAxis stroke="#9CA3AF" fontSize={12} unit=" MW" />
+                <YAxis 
+                  stroke="#9CA3AF" 
+                  fontSize={11}
+                  tickFormatter={(val) => val >= 1000 ? `${(val / 1000).toFixed(0)}k` : val}
+                  label={{ value: 'Power (MW)', angle: -90, position: 'insideLeft', offset: -20, fontSize: 14, fontWeight: 600, fill: '#4B5563' }}
+                />
                 <Tooltip 
                   labelFormatter={(val) => new Date(val).toLocaleString()}
                   contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
@@ -157,7 +173,7 @@ export default function Home() {
                     name === 'error' ? 'Forecast Error' : name === 'absError' ? 'Abs Error' : name
                   ]}
                 />
-                <Legend />
+                <Legend verticalAlign="bottom" height={36} wrapperStyle={{ paddingTop: '40px' }} />
                 <Line type="monotone" dataKey="actual" stroke="#3B82F6" strokeWidth={3} dot={false} name="Actual Generation" connectNulls={true} />
                 <Line type="monotone" dataKey="forecast" stroke="#10B981" strokeWidth={3} dot={false} name="Forecasted Output" connectNulls={true} />
                 <Line type="monotone" dataKey="error" stroke="#EF4444" strokeWidth={2} dot={true} name="Error" connectNulls={true} />
@@ -169,6 +185,10 @@ export default function Home() {
             </div>
           )}
         </section>
+
+        <footer className="mt-12 text-center space-y-4">
+          <p className="text-gray-600 font-medium text-lg">Figure 1: Sample UI</p>
+        </footer>
       </div>
     </main>
   );
