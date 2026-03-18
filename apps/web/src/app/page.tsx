@@ -6,15 +6,36 @@ import { WindDataPoint } from 'shared';
 
 export default function Home() {
   const [data, setData] = useState<WindDataPoint[]>([]);
-  const [start, setStart] = useState<string>(
-    new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().slice(0, 16)
-  );
-  const [end, setEnd] = useState<string>(
-    new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().slice(0, 16)
-  );
+  // Initialize state with localStorage values if available, otherwise defaults
+  const [start, setStart] = useState<string>('');
+  const [end, setEnd] = useState<string>('');
   const [horizon, setHorizon] = useState<number>(24);
+  const [inputError, setInputError] = useState<string | null>(null);
 
+  // Load from localStorage only on mount (client-side)
   useEffect(() => {
+    const savedStart = localStorage.getItem('wind_start');
+    const savedEnd = localStorage.getItem('wind_end');
+    const savedHorizon = localStorage.getItem('wind_horizon');
+
+    setStart(savedStart || new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().slice(0, 16));
+    setEnd(savedEnd || new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().slice(0, 16));
+    if (savedHorizon) setHorizon(Number(savedHorizon));
+  }, []);
+
+  // Sync to localStorage and fetch data when inputs change
+  useEffect(() => {
+    if (!start || !end) {
+      setInputError("Please select both a Start Date and an End Date.");
+      setData([]);
+      return;
+    }
+    
+    setInputError(null);
+    localStorage.setItem('wind_start', start);
+    localStorage.setItem('wind_end', end);
+    localStorage.setItem('wind_horizon', horizon.toString());
+
     const fetchData = async () => {
       try {
         const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
@@ -109,7 +130,15 @@ export default function Home() {
 
         <section className="p-6 bg-white rounded-xl shadow-sm border border-gray-100 h-[500px]">
           <h2 className="text-lg font-semibold mb-6">Generation Prediction (MW) vs Actual</h2>
-          {data.length > 0 ? (
+          {inputError ? (
+            <div className="w-full h-full flex flex-col items-center justify-center text-red-500 bg-red-50 rounded-lg border border-red-100 p-8 text-center">
+              <svg className="w-12 h-12 mb-4 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+              <p className="text-lg font-medium">{inputError}</p>
+              <p className="text-sm text-red-400 mt-2">Please select valid dates to view the forecast.</p>
+            </div>
+          ) : data.length > 0 ? (
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={data} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" />
@@ -129,9 +158,9 @@ export default function Home() {
                   ]}
                 />
                 <Legend />
-                <Line type="monotone" dataKey="actual" stroke="#3B82F6" strokeWidth={3} dot={false} name="Actual Generation" />
-                <Line type="monotone" dataKey="forecast" stroke="#10B981" strokeWidth={3} strokeDasharray="5 5" dot={false} name="Forecasted Output" />
-                <Line type="monotone" dataKey="error" stroke="#EF4444" strokeWidth={1} dot={true} name="Error" hide={true} />
+                <Line type="monotone" dataKey="actual" stroke="#3B82F6" strokeWidth={3} dot={false} name="Actual Generation" connectNulls={true} />
+                <Line type="monotone" dataKey="forecast" stroke="#10B981" strokeWidth={3} dot={false} name="Forecasted Output" connectNulls={true} />
+                <Line type="monotone" dataKey="error" stroke="#EF4444" strokeWidth={2} dot={true} name="Error" connectNulls={true} />
               </LineChart>
             </ResponsiveContainer>
           ) : (
