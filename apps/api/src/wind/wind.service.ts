@@ -19,11 +19,19 @@ export class WindService {
       );
     }
 
+    // Calculate an expanded publish window for forecasts
+    // We must query forecasts that were *published* before the target start time
+    // Adding an extra 48h buffer ensures we catch the most recent valid forecast
+    const horizonMs = horizon * 60 * 60 * 1000;
+    const publishStartMs = new Date(start).getTime() - horizonMs - (48 * 60 * 60 * 1000);
+    const publishStart = new Date(publishStartMs).toISOString();
+
     // Execute API requests to BMRS concurrently
     const [actuals, forecasts] = await Promise.all([
       this.bmrsService.fetchActualGeneration(start, end),
-      this.bmrsService.fetchForecastGeneration(start, end),
+      this.bmrsService.fetchForecastGeneration(publishStart, end),
     ]);
+
 
     // Format, sort, limit horizon, and merge into WindDataPoint array
     return mergeWindData(actuals, forecasts, horizon, start, end);
