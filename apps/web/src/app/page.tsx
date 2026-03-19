@@ -126,8 +126,8 @@ export default function Home() {
           </div>
         </section>
 
-        <section className="p-6 bg-white rounded-xl shadow-sm border border-gray-100 h-[600px]">
-          <h2 className="text-lg font-semibold mb-6">Wind Power Generation: Actual vs Forecasted (MW)</h2>
+        <section className="p-4 md:p-6 bg-white rounded-xl shadow-sm border border-gray-100 h-[850px] md:h-[600px]">
+          <h2 className="text-lg font-semibold mb-4 md:mb-6">Wind Power Generation: Actual vs Forecasted (MW)</h2>
           {inputError ? (
             <div className="w-full h-full flex flex-col items-center justify-center text-amber-700 bg-amber-50 rounded-lg border border-amber-100 p-8 text-center">
               <svg className="w-12 h-12 mb-4 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -138,7 +138,7 @@ export default function Home() {
             </div>
           ) : data.length > 0 ? (
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={data} margin={{ top: 20, right: 30, left: 40, bottom: 80 }}>
+              <LineChart data={data} margin={{ top: 20, right: 10, left: 10, bottom: 100 }}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#F3F4F6" />
                 <XAxis 
                   dataKey="time" 
@@ -158,7 +158,7 @@ export default function Home() {
                   stroke="#9CA3AF" 
                   fontSize={11}
                   tickFormatter={(val) => val >= 1000 ? `${(val / 1000).toFixed(0)}k` : val}
-                  label={{ value: 'Power (MW)', angle: -90, position: 'insideLeft', offset: -20, fontSize: 14, fontWeight: 600, fill: '#4B5563' }}
+                  label={{ value: 'Power (MW)', angle: -90, position: 'insideLeft', offset: -5, fontSize: 14, fontWeight: 600, fill: '#4B5563' }}
                 />
                 <Tooltip 
                   labelFormatter={(val) => new Date(val).toLocaleString()}
@@ -168,7 +168,7 @@ export default function Home() {
                     name === 'error' ? 'Forecast Error' : name === 'absError' ? 'Abs Error' : name
                   ]}
                 />
-                <Legend verticalAlign="bottom" height={36} wrapperStyle={{ paddingTop: '40px' }} />
+                <Legend verticalAlign="bottom" height={50} wrapperStyle={{ paddingTop: '50px' }} />
                 <Line type="monotone" dataKey="actual" stroke="#3B82F6" strokeWidth={3} dot={false} name="Actual Generation" connectNulls={true} />
                 <Line type="monotone" dataKey="forecast" stroke="#10B981" strokeWidth={3} dot={false} name="Forecasted Output" connectNulls={true} />
                 <Line type="monotone" dataKey="error" stroke="#EF4444" strokeWidth={2} dot={true} name="Error" connectNulls={true} />
