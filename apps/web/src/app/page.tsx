@@ -16,8 +16,10 @@ export default function Home() {
     const savedEnd = localStorage.getItem('wind_end');
     const savedHorizon = localStorage.getItem('wind_horizon');
 
-    setStart(savedStart || new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().slice(0, 16));
-    setEnd(savedEnd || new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().slice(0, 16));
+    const now = new Date();
+    const yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+    setEnd(savedEnd || now.toISOString().slice(0, 16));
+    setStart(savedStart || yesterday.toISOString().slice(0, 16));
     if (savedHorizon) setHorizon(Number(savedHorizon));
   }, []);
 

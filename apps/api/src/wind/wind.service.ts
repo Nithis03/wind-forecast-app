@@ -18,7 +18,7 @@ export class WindService {
         'Data can only be queried from January 2025 onwards.',
       );
     }
-    // Calculate an expanded publish window for forecasts
+
     const horizonMs = horizon * 60 * 60 * 1000;
     const publishStartMs = new Date(start).getTime() - horizonMs - (48 * 60 * 60 * 1000);
     const publishStart = new Date(publishStartMs).toISOString().split('.')[0] + 'Z';

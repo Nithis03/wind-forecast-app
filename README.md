@@ -2,7 +2,7 @@
 
 A professional, production-grade monorepo designed for monitoring and analyzing wind power generation. This application integrates with the BMRS (Elexon) API to compare real-time actual generation against historical forecasts.
 
-## 📁 Project Overview & Structure
+## Project Overview & Structure
 
 This project is organized as a modern monorepo to ensure full-stack type safety and modularity:
 
@@ -11,7 +11,7 @@ This project is organized as a modern monorepo to ensure full-stack type safety 
 - **`packages/shared`**: Shared TypeScript package contains common interfaces (`WindDataPoint`) used by both the frontend and backend.
 - **`apps/analysis`**: Dedicated directory for data science and research.
 
-## 🚀 How to Run Locally
+## How to Run 
 
 1. **Install Dependencies** (Run from root):
    ```bash
@@ -30,12 +30,12 @@ This project is organized as a modern monorepo to ensure full-stack type safety 
 
 The application will be accessible at `http://localhost:3000`.
 
-## 🌐 Deployment Links
+## Deployment Links
 
-*   **Frontend**: [Vercel Deployment](https://wind-forecast-app-web.vercel.app) *(Replace with your URL)*
-*   **Backend**: [Render Deployment](https://wind-forecast-app-api.onrender.com) *(Replace with your URL)*
+*   **Frontend**: [Vercel Deployment](https://wind-forecast-app-web.vercel.app/) 
+*   **Backend**: [Render Deployment](https://wind-forecast-app.onrender.com/)
 
-## 📊 Analysis Section
+## Analysis Section
 
 In-depth research and forecast accuracy models are documented in:
 [`apps/analysis/wind_analysis.ipynb`](./apps/analysis/wind_analysis.ipynb)
