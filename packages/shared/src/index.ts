@@ -1,7 +1,7 @@
 export interface WindDataPoint {
-  time: string; // ISO 8601
-  actual?: number; // Actual wind power generation (MW)
-  forecast: number | null; // Forecast wind power generation (MW)
-  error: number | null; // forecast - actual
-  absError: number | null; // Math.abs(error)
+  time: string;
+  actual: number | null;
+  forecast: number | null;
+  error: number | null;
+  absError: number | null;
 }

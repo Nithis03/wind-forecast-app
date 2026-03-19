@@ -6,13 +6,11 @@ import { WindDataPoint } from 'shared';
 
 export default function Home() {
   const [data, setData] = useState<WindDataPoint[]>([]);
-  // Initialize state with localStorage values if available, otherwise defaults
   const [start, setStart] = useState<string>('');
   const [end, setEnd] = useState<string>('');
   const [horizon, setHorizon] = useState<number>(24);
   const [inputError, setInputError] = useState<string | null>(null);
 
-  // Load from localStorage only on mount (client-side)
   useEffect(() => {
     const savedStart = localStorage.getItem('wind_start');
     const savedEnd = localStorage.getItem('wind_end');
@@ -23,7 +21,6 @@ export default function Home() {
     if (savedHorizon) setHorizon(Number(savedHorizon));
   }, []);
 
-  // Sync to localStorage and fetch data when inputs change
   useEffect(() => {
     if (!start || !end) {
       setInputError("Please select both a Start Date and an End Date.");
@@ -41,13 +38,12 @@ export default function Home() {
         const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
         const res = await fetch(`${apiUrl}/wind-data?start=${start}&end=${end}&horizon=${horizon}`);
         if (!res.ok) {
-          console.error("Failed to fetch wind data");
           return;
         }
         const json = await res.json();
         setData(json);
       } catch (err) {
-        console.error(err);
+        // Silently handle error as UI will show 'no data' or preserve last state
       }
     };
     fetchData();
@@ -55,7 +51,7 @@ export default function Home() {
 
   const stats = data.reduce(
     (acc, curr) => {
-      if (curr.actual !== undefined) {
+      if (curr.actual !== null) {
         acc.count++;
         acc.sumActual += curr.actual;
         if (curr.forecast !== null) {
@@ -80,7 +76,6 @@ export default function Home() {
           <p className="text-gray-500 mt-2">Analyze actual vs forecasted generation (MW) from BMRS.</p>
         </header>
 
-        {/* Metrics Panel */}
         <section className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <div className="p-6 bg-white rounded-xl shadow-sm border border-gray-100">
             <h3 className="text-sm font-medium text-gray-500">Mean Absolute Error (MAE)</h3>
@@ -132,14 +127,14 @@ export default function Home() {
         </section>
 
         <section className="p-6 bg-white rounded-xl shadow-sm border border-gray-100 h-[600px]">
-          <h2 className="text-lg font-semibold mb-6">Generation Prediction (MW) vs Actual</h2>
+          <h2 className="text-lg font-semibold mb-6">Wind Power Generation: Actual vs Forecasted (MW)</h2>
           {inputError ? (
-            <div className="w-full h-full flex flex-col items-center justify-center text-red-500 bg-red-50 rounded-lg border border-red-100 p-8 text-center">
-              <svg className="w-12 h-12 mb-4 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <div className="w-full h-full flex flex-col items-center justify-center text-amber-700 bg-amber-50 rounded-lg border border-amber-100 p-8 text-center">
+              <svg className="w-12 h-12 mb-4 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
               </svg>
               <p className="text-lg font-medium">{inputError}</p>
-              <p className="text-sm text-red-400 mt-2">Please select valid dates to view the forecast.</p>
+              <p className="text-sm text-amber-600 mt-2">Please select valid dates to view the forecast.</p>
             </div>
           ) : data.length > 0 ? (
             <ResponsiveContainer width="100%" height="100%">
@@ -185,10 +180,6 @@ export default function Home() {
             </div>
           )}
         </section>
-
-        <footer className="mt-12 text-center space-y-4">
-          <p className="text-gray-600 font-medium text-lg">Figure 1: Sample UI</p>
-        </footer>
       </div>
     </main>
   );

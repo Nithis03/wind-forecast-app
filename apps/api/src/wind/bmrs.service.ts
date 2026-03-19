@@ -20,7 +20,6 @@ export class BmrsService {
 
   async fetchActualGeneration(start: string, end: string): Promise<BmrsActualData[]> {
     try {
-      // FUELHH Dataset: Half-hourly generation by fuel
       const url = `${this.baseUrl}/FUELHH/stream`;
       const params = {
         publishTimeFrom: start,
@@ -41,7 +40,6 @@ export class BmrsService {
 
   async fetchForecastGeneration(start: string, end: string): Promise<BmrsForecastData[]> {
     try {
-      // WINDFOR Dataset: Wind Generation Forecast
       const url = `${this.baseUrl}/WINDFOR/stream`;
       const params = {
         publishTimeFrom: start,
@@ -69,7 +67,7 @@ export class BmrsService {
     while (current <= endTime) {
       const date = new Date(current);
       const period = Math.floor((date.getUTCHours() * 60 + date.getUTCMinutes()) / 30) + 1;
-      
+
       mock.push({
         settlementDate: date.toISOString().split('T')[0],
         settlementPeriod: period,
@@ -92,7 +90,6 @@ export class BmrsService {
       const date = new Date(current);
       const period = Math.floor((date.getUTCHours() * 60 + date.getUTCMinutes()) / 30) + 1;
 
-      // Generate a few forecasts for the same settlement point with different publish times
       for (let offset = 1; offset <= 48; offset += 12) {
         mock.push({
           settlementDate: date.toISOString().split('T')[0],
